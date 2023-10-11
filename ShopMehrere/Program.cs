@@ -15,7 +15,7 @@ builder.Services.AddDbContext<UsersContext>(options => options.UseSqlServer(conn
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options =>
 {
-    options.AccessDeniedPath = "/Home/Login";
+    options.AccessDeniedPath = "/Login";
 });
 builder.Services.AddAuthorization();
 

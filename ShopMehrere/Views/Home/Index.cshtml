@@ -1,8 +1,64 @@
-﻿@{
+﻿@model IndexViewModel
+@{
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+
+<h1>Список пользователей</h1>
+<form method="get">
+    <label>Название: </label>
+    <input name="name" value="@Model.FilterViewModel.SelectedName" />
+
+    <label>Категория: </label>
+    <select name="category" asp-items="Model.FilterViewModel.Categorys"></select>
+
+    <input type="submit" value="Фильтр" />
+</form>
+
+<table class="table">
+    <tr>
+        <th>
+            <a asp-action="Index"
+               asp-route-sortOrder="@(Model.SortViewModel.NameSort)"
+               asp-route-name="@(Model.FilterViewModel.SelectedName)"
+               asp-route-product="@(Model.FilterViewModel.SelectedCategory)">Название</a>
+        </th>
+        <th>
+            <a asp-action="Index" asp-route-sortOrder="@(Model.SortViewModel.PriceSort)"
+               asp-route-name="@(Model.FilterViewModel.SelectedName)"
+               asp-route-product="@(Model.FilterViewModel.SelectedCategory)">Цена</a>
+        </th>
+        <th>
+            <a asp-action="Index" asp-route-sortOrder="@(Model.SortViewModel.CategorySort)"
+               asp-route-name="@(Model.FilterViewModel.SelectedName)"
+               asp-route-product="@(Model.FilterViewModel.SelectedCategory)">Категория</a>
+        </th>
+    </tr>
+    @foreach (Product p in Model.Products)
+    {
+        <tr>
+            <td>@p.Name</td>
+            <td>@p.Price</td>
+            <td>@p.Category?.Name</td>
+            <td>
+                <a asp-action="EditUser" asp-controller="Home" asp-route-id="@p.Id">
+                    <button class=" btn btn-primary" type="button">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-cart-plus-fill" viewBox="0 0 16 16">
+                        <path d="M.5 1a.5.5 0 0 0 0 1h1.11l.401 1.607 1.498 7.985A.5.5 0 0 0 4 12h1a2 2 0 1 0 0 4 2 2 0 0 0 0-4h7a2 2 0 1 0 0 4 2 2 0 0 0 0-4h1a.5.5 0 0 0 .491-.408l1.5-8A.5.5 0 0 0 14.5 3H2.89l-.405-1.621A.5.5 0 0 0 2 1H.5zM6 14a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm7 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM9 5.5V7h1.5a.5.5 0 0 1 0 1H9v1.5a.5.5 0 0 1-1 0V8H6.5a.5.5 0 0 1 0-1H8V5.5a.5.5 0 0 1 1 0z" />
+                        </svg>
+                    </button>
+                </a>
+            </td>
+            <td>
+                <form asp-controller="Home" asp-action="DeleteUser" method="post" asp-route-id="@p.Id">
+                    <i class="bi bi-cart-plus-fill"></i>
+                </form>
+            </td>
+        </tr>
+    }
+</table>
+
+<page-link page-model="Model.PageViewModel" page-action="Index"
+           page-url-name="@(Model.FilterViewModel.SelectedName)"
+           page-url-company="@(Model.FilterViewModel.SelectedCategory)"
+           page-url-sortorder="@(Model.SortViewModel.Current)"></page-link>

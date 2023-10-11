@@ -24,7 +24,7 @@ namespace ShopMehrere.Controllers
 
                 Category category = new Category { Name = "technik" };
                 Category category1 = new Category { Name = "eat" };
-                db.Categories.AddRange(category, category1);
+                db.Categorys.AddRange(category, category1);
 
                 Product product = new Product { Name = "computer", Category = category, Description = "the best computer with a lot of cores", Price = 100 };
                 Product product1 = new Product { Name = "poop", Category = category1, Description = "The best eat in the world", Price = 10 };
@@ -36,26 +36,66 @@ namespace ShopMehrere.Controllers
 
                 User user1 = new User { Name = "Олег Васильев", Basket = b1, Email = "loha@gmail.com", Password = "qwerty", Role = userRole };
 
-                User user2 = new User { Name = "Олег Васильев2", Basket = b2, Email = "lol@gmail.com", Password = "qwerty", Role = adminRole };
+                User user2 = new User { Name = "Андрей Потап", Basket = b2, Email = "lol@gmail.com", Password = "qwerty", Role = adminRole };
                 db.Users.AddRange(user1, user2);
                 db.SaveChanges();
             }
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index(string name, int product = 0, int page = 1,
+            SortState sortOrder = SortState.NameAsc)
         {
+            int pageSize = 3;
 
+            //фильтрация
             IQueryable<Product> products = db.Products.Include(x => x.Category);
-            return View(products);
-        }
-        [Authorize(Roles = "admin, user")]
-        public IActionResult asdf()
-        {
 
-            IQueryable<User> users = db.Users.Include(x => x.Basket)
-                .ThenInclude(z => z.Products).ThenInclude(x => x.Category);
-            return View();
+            if (product != 0)
+            {
+                products = products.Where(p => p.CategoryId == product);
+            }
+            if (!string.IsNullOrEmpty(name))
+            {
+                products = products.Where(p => p.Name!.Contains(name));
+            }
+
+            // сортировка
+            switch (sortOrder)
+            {
+                case SortState.NameDesc:
+                    products = products.OrderByDescending(s => s.Name);
+                    break;
+                case SortState.PriceAsc:
+                    products = products.OrderBy(s => s.Price);
+                    break;
+                case SortState.PriceDesc:
+                    products = products.OrderByDescending(s => s.Price);
+                    break;
+                case SortState.CategoryAsc:
+                    products = products.OrderBy(s => s.Category!.Name);
+                    break;
+                case SortState.CategoryDesc:
+                    products = products.OrderByDescending(s => s.Category!.Name);
+                    break;
+                default:
+                    products = products.OrderBy(s => s.Name);
+                    break;
+            }
+
+            // пагинация
+            var count = await products.CountAsync();
+            var items = await products.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+
+            // формируем модель представления
+            IndexViewModel viewModel = new IndexViewModel(
+                items,
+                new PageViewModel(count, page, pageSize),
+                new FilterViewModel(db.Categorys.ToList(), product, name),
+                new SortViewModel(sortOrder)
+            );
+            return View(viewModel);
         }
+
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
@@ -82,13 +122,7 @@ namespace ShopMehrere.Controllers
         }
 
         /*
-         *  // Путь к файлу
-            string file_path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Files/hello.txt");
-            // Тип файла - content-type
-            string file_type = "text/plain";
-            // Имя файла - необязательно
-            string file_name = "hello.txt";
-            return PhysicalFile(file_path, file_type, file_name);
+            string file_path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Files/ProductsImages/computer.png");
         
          */
     }
