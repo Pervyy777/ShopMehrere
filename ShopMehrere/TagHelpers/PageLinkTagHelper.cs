@@ -30,11 +30,18 @@ namespace ShopMehrere.TagHelpers
             IUrlHelper urlHelper = urlHelperFactory.GetUrlHelper(ViewContext);
             output.TagName = "div";
 
+            // набор ссылок будет представлять список ul
             TagBuilder tag = new TagBuilder("ul");
             tag.AddCssClass("pagination");
 
+            // формируем три ссылки - на текущую, предыдущую и следующую
             TagBuilder currentItem = CreateTag(PageModel.PageNumber, urlHelper);
-
+            if (PageModel.HasPrePreviousPage)
+            {
+                TagBuilder prevItem = CreateTag(PageModel.PageNumber - 2, urlHelper);
+                tag.InnerHtml.AppendHtml(prevItem);
+            }
+            // создаем ссылку на предыдущую страницу, если она есть
             if (PageModel.HasPreviousPage)
             {
                 TagBuilder prevItem = CreateTag(PageModel.PageNumber - 1, urlHelper);
@@ -43,9 +50,15 @@ namespace ShopMehrere.TagHelpers
 
             tag.InnerHtml.AppendHtml(currentItem);
 
+            // создаем ссылку на следующую страницу, если она есть
             if (PageModel.HasNextPage)
             {
                 TagBuilder nextItem = CreateTag(PageModel.PageNumber + 1, urlHelper);
+                tag.InnerHtml.AppendHtml(nextItem);
+            }
+            if (PageModel.HasNextNextPage)
+            {
+                TagBuilder nextItem = CreateTag(PageModel.PageNumber + 2, urlHelper);
                 tag.InnerHtml.AppendHtml(nextItem);
             }
             output.Content.AppendHtml(tag);
